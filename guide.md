@@ -18,7 +18,7 @@ A v3 plugin was enabled if it was installed or it was found in the `plugins` dir
 module.exports = ({ env }) => ({
   'my-plugin': {
     enabled: true,
-    resolve: '../my-local-plugin',
+    resolve: './my-local-plugin',
     config: {
       // additional config goes here
     }
@@ -80,10 +80,24 @@ If you prefer to make these changes yourself, you can use the checklist below to
 </aside>
 
 - [ ]  Create a `server` directory
-- [ ]  Move `controllers`, `services` ,  and `middlewares` to `/server` .  For each directory add an `index.js` file that exports all files in that folder, for example:
+
+**Controllers, services, and middlewares**
+
+- [ ]  Move `controllers`, `services` ,  and `middlewares` to `/server` .  For each directory add an `index.js` file that exports all files in that folder.  Make sure that each file in these directories exports a function taking `{strapi}` as a parameter and returns an object.  For example the `controllers` directory would look like this:
+
+```jsx
+// server/controllers/my-controllerA
+
+module.exports = ({ strapi }) => ({
+  doSomething(ctx) {
+    ctx.body = { message: 'HelloWorld' };
+  },
+});
+```
 
 ```jsx
 // server/controllers/index.js
+
 'use strict';
 
 const myControllerA = require('./my-controllerA');
@@ -95,23 +109,7 @@ module.exports = {
 };
 ```
 
-<aside>
-💡 To improve the build speed, `strapi`, is lazy-loaded and will not be available in the global scope.
-
-</aside>
-
-- [ ]  Update each service file so that it exports a function taking `{strapi}` as an argument.  For example:
-
-```jsx
-// server/services/<service-name>.js
-'use strict';
-
-module.exports = ({ strapi }) => ({
-  getWelcomeMessage() {
-    return 'Welcome to Strapi 🚀';
-  },
-});
-```
+**Bootstrap Function**
 
 - [ ]  Move bootstrap from `/server/config/functions/bootstrap.js` to `/server/bootstrap.js` and pass `{strapi}` as an argument:
 
@@ -124,8 +122,45 @@ module.exports = ({ strapi }) => ({
 });
 ```
 
-- [ ]  Move routes from `/config/routes.json` to `/server/routes/index.json`
+**Routes**
+
+- [ ]  Move routes from `/config/routes.json` to `/server/routes/index.json`.  Your routes should return an array or an object specifying `admin` or `content-api` routes.
+- [ ]  Make sure your routes handler matches the same casing of your controller exports
+
+```jsx
+// server/controllers/index.js
+
+'use strict';
+
+const myControllerA = require('./my-controllerA');
+const myControllerB = require('./my-controllerB');
+
+module.exports = {
+  myControllerA,
+	myControllerB
+};
+```
+
+```jsx
+// server/routes/index.js
+
+module.exports = [
+	{
+	  method: "GET",
+	  path: "/my-controller-a/",
+		// Camel case handler to match export in server/controllers/index.js
+	  handler: "myControllerA.index", 
+		config: { policies: [] },
+  }
+]
+```
+
+**Policies**
+
 - [ ]  Move policies from `/config/policies` to `/server/policies/<policyName>.js`, add an `index.js` file to the directory that exports all files in the folder.
+
+**Models / Content-Types**
+
 - [ ]  Move / rename the `models` directory to `/server/content-types`
     - [ ]  Move / rename each model's `<modelName>.settings.json` to `/server/content-types/<contentTypeName>/schema.json`
     - [ ]  Update the info object on each `schema.json`
@@ -140,7 +175,7 @@ module.exports = ({ strapi }) => ({
     ```
     
     - [ ]  If your model used lifecycle-hooks found in `<model-name>.js` move / rename this file `/server/content-types/<contentTypeName>/lifecycle.js`, otherwise delete the file.
-    - [ ]  Create an index file for each model
+    - [ ]  Create an index file for each Content Type that exports the schema and lifecycles
     
     ```jsx
     // server/content-types/<content-type-name>/index.js
@@ -155,21 +190,36 @@ module.exports = ({ strapi }) => ({
     ```
     
     - [ ]  Create an index file for `server/content-types` and export all content-types
+    - [ ]  Make sure the key for your Content-Types matches the singular name on the Content-Type’s schema.json info object.
+    
+    ```json
+    // server/content-types/content-type-a/schema.json
+    
+    "info": {
+    	singularName: 'content-type-a', // kebab-case required
+    	pluralName: 'content-type-as', // kebab-case required
+    	displayName: 'Content-Type A',
+    	name: 'Content-Type A',
+    };
+    ```
     
     ```jsx
     // server/content-types/index.js
     'use strict'
     
-    const contentTypeA = require('./contentTypeA')
-    const contentTypeB = require('./contentTypeB')
+    const contentTypeA = require('./content-type-a')
+    const contentTypeB = require('./content-type-b')
     
     module.exports = {
-    	contentTypeA,
-    	contentTypeB
+    	"content-type-a": contentTypeA,
+    	"content-type-b": contentTypeB
     }
     ```
     
-- [ ]  Create the backend entry file at the root of your plugin: `strapi-server.js` and require all necessary files for your plugin.  For example:
+
+**Entry Files**
+
+- [ ]  Create the server entry file at the root of your plugin: `strapi-server.js` and require all necessary files for your plugin.  For example:
 
 ```jsx
 // strapi-server.js

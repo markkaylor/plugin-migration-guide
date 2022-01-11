@@ -577,6 +577,6 @@ export default {
 
 # Conclusion
 
-Hopefully this guide has helped you migrate your plugin from Strapi v3 to Strapi v4. [Strapi Market](https://market.strapi.io/) is coming soon and we are looking forward to many plugins developed by the community. For more information about Strapi Market, read the [blog post](https://strapi.io/blog/strapi-market-is-coming-soon).
+Hopefully this guide has helped you migrate your plugin from Strapi v3 to Strapi v4. [Strapi Market](https://market.strapi.io/) is coming soon and we are looking forward to many plugins developed by the community. For more information about Strapi Market, read the [blog post](https://strapi.io/blog/strapi-market-is-coming-soon). If you are ready to submit your plugin all you need to do is fill out this [form](https://market.strapi.io/submit-plugin).
 
 If you have any issues with the codemods or would like to contribute to the project please [create an issue](https://github.com/strapi/codemods/issues) or [open a pull request](https://github.com/strapi/codemods/pulls).
